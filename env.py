@@ -2,9 +2,12 @@ import math
 import pygame
 
 class buildEnvironment:
-    def __init__(self, MapDimensions):
+    def __init__(self, MapDimensions, scale):
         pygame.init()
-        self.pointCloud = []
+        #self.pointCloud = []
+        self.gridmap = set()
+        self.new_obstacles = set()
+        self.scale = scale
         self.externalMap = pygame.image.load('map1.png')
         self.maph, self.mapw = MapDimensions
         self.MapWindowName = 'Mapping - Tom Kirsch'
@@ -29,20 +32,28 @@ class buildEnvironment:
         return (int(x), int(y))
 
     def dataStorage(self, data):
-        print(len(self.pointCloud))
+        #print(len(self.pointCloud))
         for element in data:
             point = self.AD2pos(element[0], element[1], element[2])
-            if point not in self.pointCloud:
-                self.pointCloud.append(point)
+            self.AD2map(point)
+            # if point not in self.pointCloud:
+            #     self.pointCloud.append(point)
 
     def show_sensorData(self):
         self.infomap = self.map.copy()
         
         # Draw the scanned points
-        for point in self.pointCloud:
-            self.infomap.set_at((int(point[0]), int(point[1])), self.red)
+        # for point in self.pointCloud:
+        #     self.infomap.set_at((int(point[0]), int(point[1])), self.red)
+
+        for obstacle in self.new_obstacles:  # Only draw new obstacles
+            for i in range(self.scale):
+                for j in range(self.scale):
+                    self.infomap.set_at(((obstacle[0] * self.scale) + i, 
+                                        (obstacle[1] * self.scale) + j), self.red)
         
-        self.infomap.set_at((int(self.robot_position[0]), int(self.robot_position[1])), self.green)
+        self.new_obstacles.clear()
+
 
 
     def update_robot_position(self, new_position):
@@ -55,4 +66,12 @@ class buildEnvironment:
 
         # Draw new robot position
         self.infomap.set_at((int(self.robot_position[0]), int(self.robot_position[1])), self.green)
+    
+    
+    def AD2map(self, point):
+        scaled_down = (point[0] // self.scale, point[1] // self.scale)
+        if scaled_down not in self.gridmap:
+            self.gridmap.add(scaled_down)
+            self.new_obstacles.add(scaled_down)
+
 

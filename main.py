@@ -3,7 +3,8 @@ import pygame
 import math
 
 # Initialize environment
-environment = env.buildEnvironment((600, 1200))
+pixels_per_square = 5 #Each pixel is 5cm
+environment = env.buildEnvironment((600, 1200), pixels_per_square)     # 30m x 60m
 environment.originalMap = environment.map.copy()
 laser = sensors.LaserSensor(200, environment.originalMap, uncertainty=(0.5, 0.01))
 environment.map.fill((0, 0, 0))
@@ -11,7 +12,7 @@ environment.infomap = environment.map.copy()
 
 # Start position at the center of the screen
 position = [environment.map.get_width() // 2, environment.map.get_height() // 2]
-speed = 5  # Movement speed
+speed = 2  # Movement speed
 
 running = True
 
