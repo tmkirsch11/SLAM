@@ -94,14 +94,6 @@ class buildEnvironment:
                 pygame.draw.rect(self.infomap, color, 
                                  (x * self.scale, y * self.scale, self.scale, self.scale))
 
-        # Draw the robot as a circle
-        self.draw_robot()
-
-    def draw_robot(self):
-        """ Draws the robot as a filled circle. """
-        pygame.draw.circle(self.infomap, self.green, 
-                           (int(self.robot_position[0]), int(self.robot_position[1])), 
-                           self.robot_radius)
 
     def get_probability_map(self):
         """ Converts log-odds to probability using the inverse sigmoid function. """
@@ -112,7 +104,11 @@ class buildEnvironment:
         self.robot_position = new_position
         self.draw_robot()
 
-
+    def draw_robot(self):
+        """ Draws the robot as a filled circle. """
+        pygame.draw.circle(self.infomap, self.green, 
+                           (int(self.robot_position[0]), int(self.robot_position[1])), 
+                           self.robot_radius)
 
 
 
