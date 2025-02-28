@@ -3,7 +3,7 @@ import pygame
 import math
 
 # Initialize environment
-pixels_per_square = 5 #Each pixel is 5cm
+pixels_per_square = 10 #Each pixel is 5cm
 environment = env.buildEnvironment((600, 1200), pixels_per_square)     # 30m x 60m
 environment.originalMap = environment.map.copy()
 laser = sensors.LaserSensor(200, environment.originalMap, uncertainty=(0.5, 0.01))
