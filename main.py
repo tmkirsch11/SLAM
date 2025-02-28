@@ -12,7 +12,7 @@ environment.infomap = environment.map.copy()
 
 # Start position at the center of the screen
 position = [environment.map.get_width() // 2, environment.map.get_height() // 2]
-speed = 2  # Movement speed
+speed = 5  # Movement speed
 
 running = True
 
