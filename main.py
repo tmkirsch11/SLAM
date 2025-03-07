@@ -37,7 +37,7 @@ while running:
     laser.position = tuple(position)
     sensor_data = laser.sense_obstacles()
     if sensor_data != -1:
-        environment.dataStorage(sensor_data)
+        environment.dataStorage(sensor_data["obstacles"], sensor_data["free_spaces"])
         environment.show_sensorData()
         environment.update_robot_position(tuple(position))
 
