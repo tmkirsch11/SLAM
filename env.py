@@ -105,7 +105,7 @@ class buildEnvironment:
 
     def get_probability_map(self):
         """ Converts log-odds to probability using the inverse sigmoid function. """
-        return 1 / (1 + np.exp(-self.occupancy_grid))
+        return 1 / (1 + np.exp(-np.clip(self.occupancy_grid, -100, 100)))
 
     def update_robot_position(self, new_position):
         """ Updates the robot's position while keeping sensor data. """
