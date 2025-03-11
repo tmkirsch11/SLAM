@@ -40,17 +40,13 @@ class buildEnvironment:
         y = -distance * math.sin(angle) + robotPosition[1]
         return int(x), int(y)
 
-    def dataStorage(self, obstacle_data, free_spaces):
+    def dataStorage(self, data):
         """ Processes LiDAR data and updates the occupancy grid. """
-        for element in obstacle_data:
+        for element in data:
             obstacle_point = self.AD2pos(element[0], element[1], element[2])
-            self.update_map(obstacle_point, self.robot_position, True)
-        
-        for element in free_spaces:
-            self.update_map(element, self.robot_position, False)
+            self.update_map(obstacle_point, self.robot_position)
 
-
-    def update_map(self, obstacle, robot_position, obstacle_bool):
+    def update_map(self, obstacle, robot_position):
         """ Updates occupancy probabilities using log-odds. """
         grid_x, grid_y = obstacle[0] // self.scale, obstacle[1] // self.scale
         robot_x, robot_y = robot_position[0] // self.scale, robot_position[1] // self.scale
@@ -59,13 +55,12 @@ class buildEnvironment:
             return
 
         # Mark free space along the beam using Bresenham's line algorithm
-        self.mark_free_space((robot_x, robot_y), (grid_x, grid_y), obstacle_bool)
+        self.mark_free_space((robot_x, robot_y), (grid_x, grid_y))
 
         # Increase log-odds for occupied cells
-        if obstacle_bool == True:
-            self.occupancy_grid[grid_x, grid_y] += self.L_OCC
+        self.occupancy_grid[grid_x, grid_y] += self.L_OCC
 
-    def mark_free_space(self, start, end, obstacle_bool):
+    def mark_free_space(self, start, end):
         """ Uses Bresenham's line algorithm to mark free cells between the sensor and the detected obstacle. """
         x0, y0 = start
         x1, y1 = end
@@ -77,10 +72,7 @@ class buildEnvironment:
         err = dx - dy
 
         while (x0, y0) != (x1, y1):
-            if obstacle_bool:
-                self.occupancy_grid[x0, y0] += self.L_FREE  # Reduce log-odds for free space
-            else:
-                self.occupancy_grid[x0, y0] += -0.005
+            self.occupancy_grid[x0, y0] += self.L_FREE  # Reduce log-odds for free space
             e2 = 2 * err
             if e2 > -dy:
                 err -= dy
@@ -117,7 +109,3 @@ class buildEnvironment:
         pygame.draw.circle(self.infomap, self.green, 
                            (int(self.robot_position[0]), int(self.robot_position[1])), 
                            self.robot_radius)
-
-
-
-
