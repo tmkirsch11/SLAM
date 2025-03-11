@@ -28,34 +28,24 @@ class LaserSensor:
         return math.sqrt(px+py)
     
     def sense_obstacles(self):
-        data = []
-        free_spaces = []  # Stores free positions along the ray
-        x1, y1 = self.position
-
-        for angle in np.linspace(0, 2 * math.pi, 60, False):
-            x2, y2 = x1 + self.Range * math.cos(angle), y1 - self.Range * math.sin(angle)
-            ray_free = []  # Stores free spaces along the current ray
-
-            for i in range(100):  # Iterate along the ray
-                u = i / 100
-                x = int(x2 * u + x1 * (1 - u))
-                y = int(y2 * u + y1 * (1 - u))
-
-                if 0 <= x < self.w and 0 <= y < self.h:
-                    colour = self.map.get_at((x, y))
-
-                    if colour[:3] == (0, 0, 0):  # Obstacle detected
-                        distance = self.distance((x, y))
+        data=[]
+        x1, y1 = self.position[0], self.position[1]
+        for angle in np.linspace(0,2*math.pi,60,False):
+            x2, y2 = (x1 + self.Range * math.cos(angle), y1- self.Range *math.sin(angle))
+            for i in range(0,100):
+                u = i/100
+                x = int(x2 * u + x1 * (1-u))
+                y = int(y2 * u + y1 * (1-u))
+                if 0<x<self.w and 0<y<self.h:
+                    colour = self.map.get_at((x,y))
+                    if (colour[0], colour[1], colour[2]) == (0,0,0):
+                        distance = self.distance((x,y))
                         output = uncertainty_add(distance, angle, self.sigma)
                         output.append(self.position)
+                        #store the measurements
                         data.append(output)
-                        break  # Stop further checks along this ray
-                    
-                    else:
-                        ray_free.append((x, y))  # Mark as free space
-
-            else:  
-                # If no obstacle was found in this ray, add all free spaces
-                free_spaces.extend(ray_free)
-
-        return {"obstacles": data, "free_spaces": free_spaces}
+                        break
+        if len(data)>0:
+            return data
+        else:
+            return -1
