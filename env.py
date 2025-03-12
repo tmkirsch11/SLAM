@@ -33,6 +33,7 @@ class buildEnvironment:
 
         # Robot position (default center)
         self.robot_position = (self.mapw // 2, self.maph // 2)
+        self.robot_angle = 0
 
     def AD2pos(self, distance, angle, robotPosition):
         """ Converts LiDAR distance & angle to a world position. """
@@ -110,13 +111,23 @@ class buildEnvironment:
     def update_robot_position(self, new_position):
         """ Updates the robot's position while keeping sensor data. """
         self.robot_position = new_position
-        self.draw_robot()
+        self.draw_robot(self.robot_angle)
 
-    def draw_robot(self):
-        """ Draws the robot as a filled circle. """
-        pygame.draw.circle(self.infomap, self.green, 
-                           (int(self.robot_position[0]), int(self.robot_position[1])), 
-                           self.robot_radius)
+    def draw_robot(self, angle=0):
+        """Draws the robot as a triangle pointing in the direction of movement."""
+        x, y = self.robot_position
+        size = self.robot_radius * 2  # Triangle size
+
+        # Calculate triangle vertices
+        points = [
+            (x + size * math.cos(angle), y + size * math.sin(angle)),  # Front
+            (x + size * 0.5 * math.cos(angle + 2.1), y + size * 0.5 * math.sin(angle + 2.1)),  # Back-left
+            (x + size * 0.5 * math.cos(angle - 2.1), y + size * 0.5 * math.sin(angle - 2.1))   # Back-right
+        ]
+
+        # Draw triangle
+        pygame.draw.polygon(self.infomap, self.green, points)
+
 
 
 

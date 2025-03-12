@@ -3,6 +3,7 @@ import pygame
 import math
 import voice_recog
 import threading
+import re  # Import regex for extracting numbers
 
 # Initialize environment
 pixels_per_square = 5  # Each pixel is 5cm
@@ -14,8 +15,22 @@ environment.infomap = environment.map.copy()
 
 # Start position at the center of the screen
 position = [environment.map.get_width() // 2, environment.map.get_height() // 2]
+robot_angle = 0
 speed = 5  # Movement speed
-voice_movement = {"forward": False}  # Dictionary to track movement states
+angular_speed = 5
+
+
+
+voice_movement = {
+    "forward": False,
+    "turn": False,
+    "degrees": 0,  # Store turn angle
+    "radians": 0,  # Store turn angle in radians
+    "clockwise": False,
+    "right": False,
+    "anticlockwise": False,
+    "left": False
+}
 
 # Start voice recognition in a separate thread
 voice_thread = voice_recog.start_voice_recognition()
@@ -30,29 +45,69 @@ while running:
     # Get voice command (if any)
     command = voice_recog.get_command()
     if command:
+        #command = command.lower().replace(" ", "")  # Normalize input
+
         if command == "forward":
             voice_movement["forward"] = True
         elif command == "stop":
             voice_movement["forward"] = False
+        else:
+            # Check for rotation commands like "turn 180 to the left"
+            match = re.search(r"turn\s*(\d+)\s*(degrees|radians)?\s*(left|right|anticlockwise|clockwise)?", command)
+            print(match)
+            if match:
+                angle = int(match.group(1))  # Extract angle
+                unit = match.group(2) if match.group(2) else "degrees"  # Default to degrees
+                direction = match.group(3) if match.group(3) else ""  # Extract direction
+
+                print(angle, unit, direction)
+                # Convert to radians if necessary
+                if unit == "degrees":
+                    voice_movement["radians"] = math.radians(angle)
+                else:
+                    voice_movement["radians"] = angle  # Already in radians
+
+                # Set the correct turning direction
+                if direction in ["left", "anticlockwise"]:
+                    voice_movement["left"] = True
+                    voice_movement["right"] = False
+                elif direction in ["right", "clockwise"]:
+                    voice_movement["right"] = True
+                    voice_movement["left"] = False
+
+                # Mark turning as active
+                voice_movement["turn"] = True
+                voice_movement["degrees"] = angle
+    
+    if voice_movement["left"] == True:
+        robot_angle -= math.radians(angle)
+    elif voice_movement["right"] == True:
+        robot_angle += math.radians(angle)
+
+    angle = 0
 
     # Apply movement based on voice and keyboard input
     keys = pygame.key.get_pressed()
     if keys[pygame.K_LEFT]:
-        position[0] -= speed  # Move left
+        robot_angle -= math.radians(angular_speed)  # Rotate left
     if keys[pygame.K_RIGHT]:
-        position[0] += speed  # Move right
-    if keys[pygame.K_UP] or voice_movement["forward"]:  # Move up if "forward" is said
-        position[1] -= speed  
-    if keys[pygame.K_DOWN]:
-        position[1] += speed  # Move down
+        robot_angle += math.radians(angular_speed)  # Rotate right
+    if keys[pygame.K_UP] or voice_movement["forward"]:  # Move forward in the current direction
+        position[0] += speed * math.cos(robot_angle)  # Update X using cosine
+        position[1] += speed * math.sin(robot_angle)  # Update Y using sine
+    if keys[pygame.K_DOWN]:  # Move backward
+        position[0] -= speed * math.cos(robot_angle)
+        position[1] -= speed * math.sin(robot_angle)
 
     # Update laser position
     laser.position = tuple(position)
+    environment.robot_angle = robot_angle
     sensor_data = laser.sense_obstacles()
     if sensor_data != -1:
         environment.dataStorage(sensor_data["obstacles"], sensor_data["free_spaces"])
         environment.show_sensorData()
-        environment.update_robot_position(tuple(position))
+        environment.update_robot_position((int(position[0]), int(position[1])))
+
 
     # Update display
     environment.map.blit(environment.infomap, (0, 0))

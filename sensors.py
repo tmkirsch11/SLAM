@@ -18,6 +18,7 @@ class LaserSensor:
         self.speed = 4 #rounds per second
         self.sigma = np.array([uncertainty[0], uncertainty[1]])
         self.position = (0,0)
+        self.robot_angle = 0
         self.map=map
         self.w,self.h = pygame.display.get_surface().get_size()
         self.sensedObstacles = []

@@ -5,6 +5,7 @@ import sounddevice as sd
 import vosk
 import json
 import threading
+from word2number import w2n
 
 def callback(indata, frames, time, status):
     """Callback function to process audio input."""
@@ -24,6 +25,20 @@ q = queue.Queue()
 stop_event = threading.Event()
 command_queue = queue.Queue()  # Shared queue for commands
 
+def convert_numbers_in_text(text):
+    """Converts spoken number words (e.g., 'ninety') into digits (e.g., '90')."""
+    words = text.split()
+    converted_words = []
+    
+    for word in words:
+        try:
+            # Convert word to number if possible
+            converted_words.append(str(w2n.word_to_num(word)))
+        except ValueError:
+            converted_words.append(word)  # Keep original if not a number
+    
+    return " ".join(converted_words)
+
 def recognize_speech():
     """Function to recognize and process speech commands."""
     with sd.RawInputStream(samplerate=16000, blocksize=8000, dtype='int16',
@@ -38,6 +53,7 @@ def recognize_speech():
                 command = result.get("text", "").strip()
                 
                 if command:
+                    command = convert_numbers_in_text(command)  # Convert words to numbers
                     print(f"Recognized: {command}")
                     command_queue.put(command)  # Store command for main.py
 
