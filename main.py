@@ -24,11 +24,8 @@ angular_speed = 5
 voice_movement = {
     "forward": False,
     "turn": False,
-    "degrees": 0,  # Store turn angle
     "radians": 0,  # Store turn angle in radians
-    "clockwise": False,
     "right": False,
-    "anticlockwise": False,
     "left": False
 }
 
@@ -53,12 +50,19 @@ while running:
             voice_movement["forward"] = False
         else:
             # Check for rotation commands like "turn 180 to the left"
-            match = re.search(r"turn\s*(\d+)\s*(degrees|radians)?\s*(left|right|anticlockwise|clockwise)?", command)
-            print(match)
-            if match:
-                angle = int(match.group(1))  # Extract angle
-                unit = match.group(2) if match.group(2) else "degrees"  # Default to degrees
-                direction = match.group(3) if match.group(3) else ""  # Extract direction
+            pattern1 = re.search(r"turn\s*(\d+)\s*(degrees|radians)?\s*(left|right|anticlockwise|clockwise)?", command)
+            # Pattern 2: "turn left 180 degrees"
+            pattern2 = re.search(r"turn\s*(left|right|anticlockwise|clockwise)\s*(\d+)\s*(degrees|radians)?", command)
+
+            if pattern1 or pattern2:
+                if pattern1:
+                    angle = int(pattern1.group(1))
+                    direction = pattern1.group(3)
+                    unit = pattern1.group(2) if pattern1.group(2) else "degrees"
+                elif pattern2:
+                    direction = pattern2.group(1)
+                    angle = int(pattern2.group(2))
+                    unit = pattern2.group(2) if pattern2.group(2) else "degrees"
 
                 print(angle, unit, direction)
                 # Convert to radians if necessary
@@ -77,14 +81,15 @@ while running:
 
                 # Mark turning as active
                 voice_movement["turn"] = True
-                voice_movement["degrees"] = angle
     
     if voice_movement["left"] == True:
-        robot_angle -= math.radians(angle)
+        robot_angle -= voice_movement["radians"]
+        voice_movement["left"] = False
     elif voice_movement["right"] == True:
-        robot_angle += math.radians(angle)
+        robot_angle += voice_movement["radians"]
+        voice_movement["right"] = False
 
-    angle = 0
+
 
     # Apply movement based on voice and keyboard input
     keys = pygame.key.get_pressed()

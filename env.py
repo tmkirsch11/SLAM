@@ -1,6 +1,7 @@
 import math
 import pygame
 import numpy as np
+import time
 
 class buildEnvironment:
     def __init__(self, MapDimensions, scale, robot_radius=5):
@@ -34,6 +35,9 @@ class buildEnvironment:
         # Robot position (default center)
         self.robot_position = (self.mapw // 2, self.maph // 2)
         self.robot_angle = 0
+        self.started_timer = False
+        self.start_time = 0
+        self.end_time = 0
 
     def AD2pos(self, distance, angle, robotPosition):
         """ Converts LiDAR distance & angle to a world position. """
@@ -110,8 +114,27 @@ class buildEnvironment:
 
     def update_robot_position(self, new_position):
         """ Updates the robot's position while keeping sensor data. """
+        if self.robot_position != new_position:
+            if self.started_timer == False:
+                self.started_timer = True
+                self.start_time = time.time()
+            else:
+                self.end_time = time.time()
+                diff = self.end_time - self.start_time
+                
+                # Store diffs and print max when a new max is found
+                if not hasattr(self, "diff_list"):
+                    self.diff_list = []
+                
+                self.diff_list.append(diff)
+                # if diff == max(self.diff_list):  # Print only when a new max is found
+                #     print(f"New max time: {diff:.6f} seconds")
+
+                self.started_timer = False
+
         self.robot_position = new_position
         self.draw_robot(self.robot_angle)
+
 
     def draw_robot(self, angle=0):
         """Draws the robot as a triangle pointing in the direction of movement."""
